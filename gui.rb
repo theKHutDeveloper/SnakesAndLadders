@@ -1,6 +1,5 @@
-require_relative "settings"
+class Gui
 
-class Player
   def initialize(file_image, x, y)
     @image = Gosu::Image.new(file_image, :tileable => true)
     @pos_x = x
@@ -8,16 +7,10 @@ class Player
     @moving = false
   end
 
-  def set_moving(move)
-    @moving = move
+  def is_selected?(mouse_x, mouse_y)
+    true if mouse_x >= @pos_x && mouse_x <= (@pos_x + @image.width) &&
+      mouse_y >= @pos_y && mouse_y <= (@pos_y + @image.height)
   end
-
-  def move
-    if @moving
-    end
-  end
-
-  def update; end
 
   def draw
     @image.draw(@pos_x, @pos_y, 0)

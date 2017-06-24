@@ -5,8 +5,8 @@ module Settings
   BOARD = (1..100).to_a
 
   SNAKES = {
-    17 => 7, 54 => 34, 62 => 18, 64 => 60, 87 => 24, 93 => 63,
-    95 => 75, 99 => 78
+    17 => 7, 54 => 34, 62 => 18, 64 => 60, 87 => 24, 93 => 50,
+    96 => 75, 99 => 78
   }
 
   LADDERS = {
@@ -31,4 +31,8 @@ module Settings
 
   SELECT_PLAYER_NUMS = "Select number of players between 1 and 2" #4
   SELECT_PLAYER_NUMS2 = "[1 player: plays against computer]"
+
+  CHOOSE_PLAYER_NICKNAMES = "Do you want to give your player/s nicknames?"
+
+  SET_ORDER_TEXT = "Ok, let's see who gets to start first!"
 end

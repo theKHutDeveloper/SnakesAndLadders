@@ -6,7 +6,7 @@ module GameModule
 "Play Snakes and Ladders? - ['y' for yes or any other key to exit]"
 
   HOW_TO_PLAY_TEXT = <<-HEREDOC
-  
+
 Instructions:
 To decide the order of play each player should roll one die to see
 who gets the highest number. Whoever rolls the highest number gets to
@@ -18,19 +18,13 @@ rolled, each of those people roll the die an additional time to see who
 gets to go first.\n
 HEREDOC
 
-  SET_ORDER_TEXT = <<-HEREDOC
+  SET_ORDER_TEXT = "Ok, let's see who gets to start first!"
 
-Ok, let's see who gets to start first!
 
-HEREDOC
+  SELECT_PLAYER_NUMS = "Choose from the number of players below"
 
-  SELECT_PLAYER_NUMS = <<-HEREDOC
-Select number of players between 1 and 4 [1 player: plays against computer]
-HEREDOC
 
-  CHOOSE_PLAYER_NICKNAMES = <<-HEREDOC
-Do you want to give your player/s nicknames? ['y' for yes or any other key to choose default names]
-HEREDOC
+  CHOOSE_PLAYER_NICKNAMES = "Do you want to change the names of your players?"
 
   BOARD = (1..100).to_a
 
