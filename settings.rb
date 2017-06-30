@@ -2,6 +2,18 @@
 module Settings
   TILE = 64
 
+  PLAYER_TEXT_POS_X = [90, 220, 350, 480]
+  PLAYER_TEXT_POS_Y = 660
+
+  TILE_DEFICIENT_X  = [0, 10, 20, 30]
+  TILE_DEFICIENT_Y  = [0, 15, 30, 45]
+
+  ICONS_POS_X = [50, 180, 310, 440]
+  ICONS_POS_Y = 650
+
+  COUNTER_STARTING_POS_X = [0, 10, 20, 30]
+
+  COUNTER_STARTING_POS_Y = [(TILE * 9), (TILE * 9) + 15, (TILE * 9) + 30, (TILE * 9) + 45]
   BOARD = (1..100).to_a
 
   SNAKES = {
@@ -35,4 +47,5 @@ module Settings
   CHOOSE_PLAYER_NICKNAMES = "Do you want to give your player/s nicknames?"
 
   SET_ORDER_TEXT = "Ok, let's see who gets to start first!"
+
 end

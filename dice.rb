@@ -10,7 +10,7 @@ class Dice
     @dice = Gosu::Image.load_tiles('assets/dice.png', @width, @height, {tileable: true})
     @pos_x = x
     @pos_y = y
-    @dice_value = 0#1
+    @dice_value = 0
     @start_roll = 1
 
   end
@@ -31,6 +31,10 @@ class Dice
         @start_roll = 1
       end
     end
+  end
+
+  def reset_dice
+    @dice_value = 0
   end
 
   def dice_value

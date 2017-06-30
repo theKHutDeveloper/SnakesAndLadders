@@ -8,22 +8,23 @@ require_relative 'ladder'
 
 class Game < Gosu::Window
 
-  SCREENS = [:title, :instructions, :selection, :play_order, :game, :fin]
+  SCREENS = [:title, :instructions, :selection, :play_order, :chose_counter, :game, :fin]
 
   def initialize
     super 640, 800
     self.caption = "Snakes & Ladders"
     @font = Gosu::Font.new(20)
-    @order, @players = [], []
     @dice = Dice.new(300, 300)
     @dice_active = false
+    @dice_pressed = false
+    @chose_dice = 0
     @current_screen = SCREENS.find_index(:title)
     @buffer = Gosu::TextInput.new
-    @chose_dice = 0
-    @dice_pressed = false
     create_gui_images
     create_snakes
     create_ladders
+    create_counters
+    create_icons
     set_screen(@current_screen)
   end
 
@@ -57,6 +58,7 @@ class Game < Gosu::Window
       if mouse_x >= @dice.pos_x && mouse_x <= (@dice.pos_x + @dice.width) &&
         mouse_y >= @dice.pos_y && mouse_y <= (@dice.pos_y + @dice.height)
         @dice.roll_dice
+        @dice_pressed = true
       end
     elsif id == Gosu::MsLeft && @current_screen == SCREENS.find_index(:title)
        if @info_img.is_selected?(mouse_x, mouse_y)
@@ -72,28 +74,6 @@ class Game < Gosu::Window
         @current_screen = SCREENS.find_index(:selection)
         set_screen(@current_screen)
         @question = 0
-      end
-    elsif id == Gosu::MsLeft && @current_screen == SCREENS.find_index(:play_order) && @dice_active
-      if mouse_x >= @dice.pos_x && mouse_x <= (@dice.pos_x + @dice.width) &&
-        mouse_y >= @dice.pos_x && mouse_y <= (@dice.pos_y + @dice.height)
-
-        if @chose_dice <= (@total_players-1)
-          @dice.roll_dice
-          @dice_pressed = true
-        end
-      end
-
-      if @chose_dice == 10
-        if @roll_img.is_selected?(mouse_x, mouse_y)
-          @chose_dice = 0
-        end
-      end
-
-      if @chose_dice == 20
-        if @next_img.is_selected?(mouse_x, mouse_y)
-          @current_screen = SCREENS.find_index(:game)
-          set_screen(@current_screen)
-        end
       end
     elsif id == Gosu::MsLeft && @current_screen == SCREENS.find_index(:selection)
       if @question == 0
@@ -123,10 +103,65 @@ class Game < Gosu::Window
           end
           @current_screen = SCREENS.find_index(:play_order)
           set_screen(@current_screen)
-
         end
       end
+    elsif id == Gosu::MsLeft && @current_screen == SCREENS.find_index(:play_order)
+      if @dice_active
+        if mouse_x >= @dice.pos_x && mouse_x <= (@dice.pos_x + @dice.width) &&
+          mouse_y >= @dice.pos_x && mouse_y <= (@dice.pos_y + @dice.height)
 
+          if @chose_dice <= (@total_players-1)
+            @dice.roll_dice
+            @dice_pressed = true
+          end
+        end
+
+        if @chose_dice == 10
+          if @roll_img.is_selected?(mouse_x, mouse_y)
+            @chose_dice = 0
+          end
+        end
+
+        if @chose_dice == 20
+          if @next_img.is_selected?(mouse_x, mouse_y)
+            @dice_active = false
+            @player_counter = 0
+            @current_screen = SCREENS.find_index(:chose_counter)
+            set_screen(@current_screen)
+          end
+        end
+      end
+    elsif id == Gosu::MsLeft && @current_screen == SCREENS.find_index(:chose_counter)
+      if @player_counter < @total_players
+        @counters.each_with_index { | counter, i |
+          if mouse_x >= counter.pos_x && mouse_x <= counter.pos_x + counter.width &&
+            mouse_y >= counter.pos_y && mouse_y <= counter.pos_y + counter.height
+            @players[@order[@player_counter]][:counter] = counter
+            @players[@order[@player_counter]][:icon] = @temp_icons[i]
+            @player_counter += 1 if @player_counter < @total_players
+            @temp_icons.delete_at(i)
+            @counters.delete(counter)
+            break
+          end
+        }
+      else
+        if @next_img.is_selected?(mouse_x, mouse_y)
+          @players.each_with_index { | player, i |
+            player[:counter].pos_x = Settings::COUNTER_STARTING_POS_X[i]
+            player[:counter].pos_y = Settings::COUNTER_STARTING_POS_Y[i]
+            player[:icon].pos_x = Settings::ICONS_POS_X[i]
+            player[:icon].pos_y = Settings::ICONS_POS_Y
+          }
+
+          @dice.pos_x = Settings::PLAYER_TEXT_POS_X[@order[0]]
+          @dice_active = true
+          @order_index = 0
+          @dice.reset_dice
+          set_markers
+          @current_screen = SCREENS.find_index(:game)
+          set_screen(@current_screen)
+        end
+      end
     else
       super
     end
@@ -147,7 +182,6 @@ class Game < Gosu::Window
       @dice.update
       if @dice_pressed
         if @dice.dice_value != 0
-          #puts "Choose dice = #{@chose_dice} & Dice value = #{@dice.dice_value}"
           @players[@chose_dice][:dice] = @dice.dice_value
           if @chose_dice < (@total_players)
             @chose_dice += 1
@@ -176,20 +210,48 @@ class Game < Gosu::Window
           @chose_dice = 10
         else
           index = @players.map{ |player| player[:dice]}.flatten.index(dice_max)
+          @order =  []
           @order.push(index)
           1.upto(@players.size - 1) { | i |
             @order[i-1] == (@players.size - 1) ? @order.push(0) : @order.push(@order[i-1]+1)
           }
-          #puts "Orders = #{@order}, dice max = #{dice_max}"
           @chose_dice = 20
         end
       end
-
+    when SCREENS.find_index(:chose_counter)
+      if @player_counter < @total_players
+        @player_txt = "#{@players[@order[@player_counter]][:name]}, choose a counter to play with"
+      end
     when SCREENS.find_index(:game)
-      play_board_game
-      @dice.pos_x = 20
+      @dice_active = true
+      ordered = @order[@order_index]
+      @dice.pos_x = Settings::PLAYER_TEXT_POS_X[ordered]
       @dice.pos_y = 720
       @dice.update
+      if @dice_pressed
+        if @dice.dice_value != 0
+          @players[ordered][:dice] = @dice.dice_value
+          puts "dice = #{@players[ordered][:dice]}"
+          score = @players[ordered][:position] + @players[ordered][:dice]
+          if score <= Settings::WINNING_SCORE
+            offset_x = @players[ordered][:x]
+            offset_y = @players[ordered][:y]
+            @players[ordered][:position] = score
+            @players[ordered][:counter].set_destination(find_position(@players[ordered][:position], offset_x, offset_y))
+          end
+
+          @order_index += 1
+          if @order_index == @total_players
+            @order_index = 0
+            @dice.reset_dice
+          end
+          @dice_pressed = false
+        end
+      end
+
+      @players.each do |player|
+        player[:counter].update
+      end
     when SCREENS.find_index(:fin)
     end
   end
@@ -273,6 +335,21 @@ class Game < Gosu::Window
         @font.draw("#{@players[@order[0]][:name]} scored the highest and will play first", 10, 200, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
         @next_img.draw
       end
+    when SCREENS.find_index(:chose_counter)
+      @font.draw("Now each player will take turns to choose a counter to represent them on the gameboard", 10, 20, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+      if @player_counter < @total_players
+        @font.draw(@player_txt, 10, 70, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+      else
+        @font.draw("Ok, now let's play!!!", 10, 70, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @next_img.draw
+      end
+      x = 50
+      @counters.each do |counter|
+        counter.pos_x = x
+        counter.pos_y = 200
+        counter.draw
+        x += 70
+      end
     when SCREENS.find_index(:game)
       @ladders.each do | ladder |
         ladder.draw
@@ -282,18 +359,22 @@ class Game < Gosu::Window
         snake.draw
       end
 
-      x = 100
-      @players.each do | player |
-        @font.draw("#{player[:name]}", x, 660, 0, scale_x = 1, scale_y = 1, Gosu::Color::WHITE)
-        x+= 260
+      @players.each_with_index { | player, i |
+        @font.draw("#{player[:name]}", Settings::PLAYER_TEXT_POS_X[i],Settings::PLAYER_TEXT_POS_Y, 0, scale_x = 1, scale_y = 1, Gosu::Color::WHITE)
         player[:counter].draw
+        player[:icon].draw
         @dice.draw
-      end
+      }
     when SCREENS.find_index(:fin)
-
     end
   end
 
+  def set_markers
+    @players.each_with_index { | player, i |
+      player[:x] = Settings::TILE_DEFICIENT_X[i]
+      player[:y] = Settings::TILE_DEFICIENT_Y[i]
+    }
+  end
 
   def set_players(size)
     @total_players = size
@@ -303,17 +384,17 @@ class Game < Gosu::Window
   end
 
   def set_default_players
+    @players = []
     0.upto(@total_players - 1) { | i |
-      details = {name: "player#{i+1}", position: 0, dice: 0, counter: counters[i]}
+      details = {name: "player#{i+1}", position: 0, dice: 0}
       @players.push(details)
     }
 
     if @vs_computer
-      details = {name: "computer", position: 0, dice: 0, counter: counters[1]}
+      details = {name: "computer", position: 0, dice: 0}
       @players.push(details)
     end
   end
-
 
   def set_board
     @board = Settings::BOARD
@@ -321,64 +402,57 @@ class Game < Gosu::Window
     @ladders = Settings::LADDERS
   end
 
-  # def winner?
-  #   high_score = @players.collect { |player| player[:position]}.flatten.max
-  #   high_score == Settings::WINNING_SCORE
-  # end
-  #
-  # def check_if_landed_on_snake_or_ladder(index, score)
-  #   snake = Settings::SNAKES.keys.find { | i | i == score }
-  #
-  #   if !snake.nil?
-  #     down = Settings::SNAKES[snake]
-  #     puts "Ooops, you landed on a snake...down you go to #{down}"
-  #     @players[index][:position] = down
-  #   else
-  #     ladder = Settings::LADDERS.keys.find { | i | i == score }
-  #     if !ladder.nil?
-  #       up = Settings::LADDERS[ladder]
-  #       puts "Great!!!, there's a ladder, let's go up to #{up}"
-  #       @players[index][:position] = up
-  #     end
-  #   end
-  # end
-
   def needs_cursor?; true; end
 
-  def play_board_game
-    @dice_active = true
-    # quit_game = 0
-    # until winner? || quit_game == 1
-    #
-    #   @order.each do | i |
-    #     loop do
-    #       #@players[i][:dice] = @dice.roll_dice
-    #       puts "#{@players[i][:name]} rolled a #{@players[i][:dice]}"
-    #       score = @players[i][:position] + @players[i][:dice]
-    #
-    #       @players[i][:position] = score if score <= Settings::WINNING_SCORE
-    #       puts "You're now at position #{@players[i][:position]}"
-    #       check_if_landed_on_snake_or_ladder(i, @players[i][:position])
-    #
-    #       break if @players[i][:dice] != 6
-    #     end
-    #
-    #     if winner?
-    #       puts "Congratulations #{@players[i][:name]}, you have WON!!!!"
-    #       break
-    #     end
-    #   end
-    # end
+  def find_position(position, offset_x, offset_y)
+    case position
+    when 1..10 then y = Settings::TILE * 9
+    when 11..20 then y = Settings::TILE * 8
+    when 21..30 then y = Settings::TILE * 7
+    when 31..40 then y = Settings::TILE * 6
+    when 41..50 then y = Settings::TILE * 5
+    when 51..60 then y = Settings::TILE * 4
+    when 61..70 then y = Settings::TILE * 3
+    when 71..80 then y = Settings::TILE * 2
+    when 81..90 then y = Settings::TILE
+    when 91..100 then y = 0
+    end
+
+    case position
+    when 1, 20, 21, 40, 41, 60, 61, 80, 81, 100 then x = 0
+    when 2, 19, 22, 39, 42, 59, 62, 79, 82, 99 then x = Settings::TILE
+    when 3, 18, 23, 38, 43, 58, 63, 78, 83, 98 then x = Settings::TILE * 2
+    when 4, 17, 24, 37, 44, 57, 64, 77, 84, 97 then x = Settings::TILE * 3
+    when 5, 16, 25, 36, 45, 56, 65, 76, 85, 96 then x = Settings::TILE * 4
+    when 6, 15, 26, 35, 46, 55, 66, 75, 86, 95 then x = Settings::TILE * 5
+    when 7, 14, 27, 34, 47, 54, 67, 74, 87, 94 then x = Settings::TILE * 6
+    when 8, 13, 28, 33, 48, 53, 68, 73, 88, 93 then x = Settings::TILE * 7
+    when 9, 12, 29, 32, 49, 52, 69, 72, 89, 92 then x = Settings::TILE * 8
+    when 10, 11, 30, 31, 50, 51, 70, 71, 90, 91 then x = Settings::TILE * 9
+    end
+
+    x += offset_x
+    y += offset_y
+
+    return [x,y]
   end
 
-  def counters
-    imgs = [
+  def create_counters
+    @counters = [
       Player.new("assets/player_green.png", 0, Settings::TILE * 9),
       Player.new("assets/player_indigo.png", 10, (Settings::TILE * 9 + 15)),
       Player.new("assets/player_yellow.png", 20, (Settings::TILE * 9 + 30)),
       Player.new("assets/player_violet.png", 30, (Settings::TILE * 9 + 45))
     ]
-    imgs
+  end
+
+  def create_icons
+    @temp_icons = [
+      Player.new("assets/player_green.png", 0, 0),
+      Player.new("assets/player_indigo.png", 10, 0),
+      Player.new("assets/player_yellow.png", 20, 0),
+      Player.new("assets/player_violet.png", 30, 0)
+    ]
   end
 
   def create_gui_images
