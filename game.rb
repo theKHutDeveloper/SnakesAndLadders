@@ -236,6 +236,7 @@ class Game < Gosu::Window
           if score <= Settings::WINNING_SCORE
             offset_x = @players[ordered][:x]
             offset_y = @players[ordered][:y]
+            puts "position = #{@players[ordered][:position]}"
             @players[ordered][:position] = score
             @players[ordered][:counter].set_destination(find_position(@players[ordered][:position], offset_x, offset_y))
           end
@@ -251,7 +252,15 @@ class Game < Gosu::Window
 
       @players.each do |player|
         player[:counter].update
+
+        if !player[:counter].moving
+          if winner?
+            puts "Congratulations #{player[:name]}, you have WON!!!!"
+          end
+        end
       end
+
+
     when SCREENS.find_index(:fin)
     end
   end
@@ -435,6 +444,11 @@ class Game < Gosu::Window
     y += offset_y
 
     return [x,y]
+  end
+
+  def winner?
+    high_score = @players.collect { |player| player[:position]}.flatten.max
+    high_score == Settings::WINNING_SCORE
   end
 
   def create_counters
