@@ -158,6 +158,7 @@ class Game < Gosu::Window
           @order_index = 0
           @dice.reset_dice
           set_markers
+          @dest = []
           @current_screen = SCREENS.find_index(:game)
           set_screen(@current_screen)
         end
@@ -223,30 +224,41 @@ class Game < Gosu::Window
         @player_txt = "#{@players[@order[@player_counter]][:name]}, choose a counter to play with"
       end
     when SCREENS.find_index(:game)
-      @dice_active = true
       ordered = @order[@order_index]
       @dice.pos_x = Settings::PLAYER_TEXT_POS_X[ordered]
       @dice.pos_y = 720
       @dice.update
+
       if @dice_pressed
         if @dice.dice_value != 0
           @players[ordered][:dice] = @dice.dice_value
           puts "dice = #{@players[ordered][:dice]}"
           score = @players[ordered][:position] + @players[ordered][:dice]
+
           if score <= Settings::WINNING_SCORE
             offset_x = @players[ordered][:x]
             offset_y = @players[ordered][:y]
             puts "position = #{@players[ordered][:position]}"
             @players[ordered][:position] = score
+            @dest = find_position(@players[ordered][:position], offset_x, offset_y)
+            puts @dest
             @players[ordered][:counter].set_destination(find_position(@players[ordered][:position], offset_x, offset_y))
           end
 
+          @dice_pressed = false
+          @dice_active = false
+        end
+      end
+
+      if !@dest.empty?
+        if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
+          @dest.clear
+          @dice_active = true
           @order_index += 1
+
           if @order_index == @total_players
             @order_index = 0
-            @dice.reset_dice
           end
-          @dice_pressed = false
         end
       end
 
@@ -256,6 +268,8 @@ class Game < Gosu::Window
         if !player[:counter].moving
           if winner?
             puts "Congratulations #{player[:name]}, you have WON!!!!"
+            @current_screen = SCREENS.find_index(:fin)
+            set_screen(@current_screen)
           end
         end
       end
