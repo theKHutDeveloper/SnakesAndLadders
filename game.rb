@@ -347,9 +347,18 @@ class Game < Gosu::Window
 
       if (@chose_dice < @total_players && !@vs_computer ) || (@vs_computer && @chose_dice == 0)
         @dice.draw
-        @font.draw("#{@players[@chose_dice][:name]}, click the dice to roll", 10, 110, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        y = 110
+        @players.each_with_index { | player, index |
+          if index < @chose_dice && @chose_dice < @total_players
+            @font.draw("#{player[:name]} rolled a #{player[:dice]}", 10, y, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+            y +=30
+          end
+        }
+        @font.draw("#{@players[@chose_dice][:name]}, click the dice to roll", 10, y, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
       elsif @vs_computer && (@chose_dice > 0 && @chose_dice < 6)
-        @font.draw("#{@players[1][:name]}, is rolling the dice", 10, 110, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @font.draw("#{@players[0][:name]} rolled a #{@players[0][:dice]}", 10, 110, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @font.draw("#{@players[1][:name]}, is rolling the dice", 10, 140, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @dice.draw
       elsif @chose_dice >= @total_players
         y = 110
         @players.each do | player |
@@ -359,11 +368,11 @@ class Game < Gosu::Window
       end
 
       if @chose_dice == 10
-        @font.draw("At least two players rolled the highest dice score. Press the button to roll again", 10, 200, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @font.draw("At least two players rolled the highest dice score. Press the button to roll again", 10, (110 + (30 * @total_players)), 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
         @roll_img.draw
 
       elsif @chose_dice == 20
-        @font.draw("#{@players[@order[0]][:name]} scored the highest and will play first", 10, 200, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
+        @font.draw("#{@players[@order[0]][:name]} scored the highest and will play first", 10, (110 + (30 * @total_players)), 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
         @next_img.draw
       end
     when SCREENS.find_index(:chose_counter)
