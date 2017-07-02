@@ -253,6 +253,15 @@ class Game < Gosu::Window
       if !@dest.empty?
         if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
           @dest.clear
+
+          if landed_on_snake(ordered, @players[ordered][:position])
+            @players[ordered][:counter].set_destination(find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
+            @players[ordered][:counter].snake_or_ladder = true
+          elsif landed_on_ladder(ordered, @players[ordered][:position])
+            @players[ordered][:counter].set_destination(find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
+            @players[ordered][:counter].snake_or_ladder = true
+          end
+
           @dice_active = true
 
           if @players[ordered][:dice] == 6
@@ -281,8 +290,6 @@ class Game < Gosu::Window
           end
         end
       end
-
-
     when SCREENS.find_index(:fin)
     end
   end
@@ -408,6 +415,53 @@ class Game < Gosu::Window
     when SCREENS.find_index(:fin)
     end
   end
+
+  def landed_on_snake(index, score)
+    snake = Settings::SNAKES.keys.find { | i | i == score }
+    landed = false
+
+    if !snake.nil?
+      down = Settings::SNAKES[snake]
+      puts "Ooops, you landed on a snake...down you go to #{down}"
+      landed = true
+      #@players[index][:position] = down
+    end
+    landed
+  end
+
+  def landed_on_ladder(index, score)
+    ladder = Settings::LADDERS.keys.find { | i | i == score }
+    landed = false
+
+    if !ladder.nil?
+      up = Settings::LADDERS[ladder]
+      puts "Great!!!, there's a ladder, let's go up to #{up}"
+      landed = true
+      #@players[index][:position] = up
+    end
+    landed
+  end
+
+  # def snake_or_ladder(index, score)
+  #   snake = Settings::SNAKES.keys.find { | i | i == score }
+  #   landed = false
+  #
+  #   if !snake.nil?
+  #     down = Settings::SNAKES[snake]
+  #     puts "Ooops, you landed on a snake...down you go to #{down}"
+  #     landed = true
+  #     @players[index][:position] = down
+  #   else
+  #     ladder = Settings::LADDERS.keys.find { | i | i == score }
+  #     if !ladder.nil?
+  #       up = Settings::LADDERS[ladder]
+  #       puts "Great!!!, there's a ladder, let's go up to #{up}"
+  #       landed = true
+  #       @players[index][:position] = up
+  #     end
+  #   end
+  #   landed
+  # end
 
   def set_markers
     @players.each_with_index { | player, i |
