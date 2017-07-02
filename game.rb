@@ -254,7 +254,15 @@ class Game < Gosu::Window
         if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
           @dest.clear
           @dice_active = true
-          @order_index += 1
+
+          if @players[ordered][:dice] == 6
+            if @players[ordered][:name] == "computer"
+              @dice.roll_dice
+              @dice_pressed = true
+            end
+          else
+            @order_index += 1
+          end
 
           if @order_index == @total_players
             @order_index = 0
