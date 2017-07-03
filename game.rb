@@ -7,7 +7,6 @@ require_relative 'snake'
 require_relative 'ladder'
 
 class Game < Gosu::Window
-
   SCREENS = [:title, :instructions, :selection, :play_order, :chose_counter, :game, :fin]
 
   def initialize
