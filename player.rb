@@ -24,6 +24,7 @@ class Player
   end
 
   def set_destination(dest)
+    @destination.clear
     @destination.push(dest[0], dest[1])
     puts "Destination #{@destination} and position #{@pos_x}, #{@pos_y}"
     @moving = true
@@ -93,7 +94,7 @@ class Player
     end
   end
 
-  def update;
+  def update
     if @snake_or_ladder
       landed
     else

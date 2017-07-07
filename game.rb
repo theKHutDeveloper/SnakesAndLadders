@@ -242,10 +242,16 @@ class Game < Gosu::Window
             @dest = find_position(@players[ordered][:position], offset_x, offset_y)
             puts @dest
             @players[ordered][:counter].set_destination(find_position(@players[ordered][:position], offset_x, offset_y))
+            @dice_active = false
+          else
+            @order_index += 1
+            if @order_index == @total_players
+              @order_index = 0
+            end
+            @dice_active = true
           end
 
           @dice_pressed = false
-          @dice_active = false
         end
       end
 
@@ -282,13 +288,18 @@ class Game < Gosu::Window
         player[:counter].update
 
         if !player[:counter].moving
-          if winner?
+          if player[:revised_position] > 0
+            player[:position] = player[:revised_position]
+            player[:revised_position] = 0
+          end
+          if winner? #play finishes before player moves to winning position
             puts "Congratulations #{player[:name]}, you have WON!!!!"
             @current_screen = SCREENS.find_index(:fin)
             set_screen(@current_screen)
           end
         end
       end
+
     when SCREENS.find_index(:fin)
     end
   end
@@ -422,8 +433,8 @@ class Game < Gosu::Window
     if !snake.nil?
       down = Settings::SNAKES[snake]
       puts "Ooops, you landed on a snake...down you go to #{down}"
+      @players[index][:revised_position] = down
       landed = true
-      #@players[index][:position] = down
     end
     landed
   end
@@ -435,32 +446,12 @@ class Game < Gosu::Window
     if !ladder.nil?
       up = Settings::LADDERS[ladder]
       puts "Great!!!, there's a ladder, let's go up to #{up}"
+      @players[index][:revised_position] = up
       landed = true
-      #@players[index][:position] = up
     end
     landed
   end
 
-  # def snake_or_ladder(index, score)
-  #   snake = Settings::SNAKES.keys.find { | i | i == score }
-  #   landed = false
-  #
-  #   if !snake.nil?
-  #     down = Settings::SNAKES[snake]
-  #     puts "Ooops, you landed on a snake...down you go to #{down}"
-  #     landed = true
-  #     @players[index][:position] = down
-  #   else
-  #     ladder = Settings::LADDERS.keys.find { | i | i == score }
-  #     if !ladder.nil?
-  #       up = Settings::LADDERS[ladder]
-  #       puts "Great!!!, there's a ladder, let's go up to #{up}"
-  #       landed = true
-  #       @players[index][:position] = up
-  #     end
-  #   end
-  #   landed
-  # end
 
   def set_markers
     @players.each_with_index { | player, i |
@@ -479,12 +470,12 @@ class Game < Gosu::Window
   def set_default_players
     @players = []
     0.upto(@total_players - 1) { | i |
-      details = {name: "player#{i+1}", position: 0, dice: 0}
+      details = {name: "player#{i+1}", position: 0, dice: 0, revised_position: 0}
       @players.push(details)
     }
 
     if @vs_computer
-      details = {name: "computer", position: 0, dice: 0}
+      details = {name: "computer", position: 0, dice: 0, revised_position: 0}
       @players.push(details)
     end
   end
