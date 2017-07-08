@@ -13,7 +13,6 @@ class Game < Gosu::Window
     super 640, 800
     self.caption = "Snakes & Ladders"
     @font = Gosu::Font.new(20)
-    @big_font = Gosu::Font.new(40)
     @dice = Dice.new(300, 300)
     @dice_active = false
     @dice_pressed = false
@@ -265,11 +264,13 @@ class Game < Gosu::Window
               @players[ordered][:counter].set_destination(find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
               @players[ordered][:counter].snake_or_ladder = true
               @dest = find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y])
+              @screen_text = "Ooops, you landed on a snake...down you go to #{Settings::SNAKES[@players[ordered][:position]]}"
               @next_step = 2
             elsif landed_on_ladder(ordered, @players[ordered][:position])
               @players[ordered][:counter].set_destination(find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
               @players[ordered][:counter].snake_or_ladder = true
               @dest = find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y])
+              @screen_text = "Great!!!, there's a ladder, let's go up to #{Settings::LADDERS[@players[ordered][:position]]}"
               @next_step = 2
             else
               @next_step = 1
@@ -281,7 +282,6 @@ class Game < Gosu::Window
       if @next_step == 2
         if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
           @dest.clear
-          puts "snakes or ladders"
           @next_step = 1
         end
       end
@@ -446,6 +446,10 @@ class Game < Gosu::Window
         player[:icon].draw
         @dice.draw
       }
+
+      if @next_step == 2
+        @font.draw(@screen_text, 120, 695, 0, scale_x = 1, scale_y = 1, Gosu::Color::YELLOW)
+      end
     when SCREENS.find_index(:fin)
     end
   end
@@ -456,7 +460,6 @@ class Game < Gosu::Window
 
     if !snake.nil?
       down = Settings::SNAKES[snake]
-      puts "Ooops, you landed on a snake...down you go to #{down}"
       @players[index][:revised_position] = down
       landed = true
     end
@@ -469,13 +472,11 @@ class Game < Gosu::Window
 
     if !ladder.nil?
       up = Settings::LADDERS[ladder]
-      puts "Great!!!, there's a ladder, let's go up to #{up}"
       @players[index][:revised_position] = up
       landed = true
     end
     landed
   end
-
 
   def set_markers
     @players.each_with_index { | player, i |
