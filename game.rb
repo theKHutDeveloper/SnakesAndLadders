@@ -13,6 +13,7 @@ class Game < Gosu::Window
     super 640, 800
     self.caption = "Snakes & Ladders"
     @font = Gosu::Font.new(20)
+    @big_font = Gosu::Font.new(40)
     @dice = Dice.new(300, 300)
     @dice_active = false
     @dice_pressed = false
@@ -154,6 +155,7 @@ class Game < Gosu::Window
 
           @dice.pos_x = Settings::PLAYER_TEXT_POS_X[@order[0]]
           @dice_active = true
+          @next_step = 0
           @order_index = 0
           @dice.reset_dice
           set_markers
@@ -255,32 +257,53 @@ class Game < Gosu::Window
         end
       end
 
-      if !@dest.empty?
+      if @next_step == 0
+        if !@dest.empty?
+          if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
+            @dest.clear
+            if landed_on_snake(ordered, @players[ordered][:position])
+              @players[ordered][:counter].set_destination(find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
+              @players[ordered][:counter].snake_or_ladder = true
+              @dest = find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y])
+              @next_step = 2
+            elsif landed_on_ladder(ordered, @players[ordered][:position])
+              @players[ordered][:counter].set_destination(find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
+              @players[ordered][:counter].snake_or_ladder = true
+              @dest = find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y])
+              @next_step = 2
+            else
+              @next_step = 1
+            end
+          end
+        end
+      end
+
+      if @next_step == 2
         if @players[ordered][:counter].pos_x == @dest[0] && @players[ordered][:counter].pos_y == @dest[1]
           @dest.clear
+          puts "snakes or ladders"
+          @next_step = 1
+        end
+      end
 
-          if landed_on_snake(ordered, @players[ordered][:position])
-            @players[ordered][:counter].set_destination(find_position(Settings::SNAKES[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
-            @players[ordered][:counter].snake_or_ladder = true
-          elsif landed_on_ladder(ordered, @players[ordered][:position])
-            @players[ordered][:counter].set_destination(find_position(Settings::LADDERS[@players[ordered][:position]], @players[ordered][:x], @players[ordered][:y]))
-            @players[ordered][:counter].snake_or_ladder = true
-          end
-
-          @dice_active = true
-
-          if @players[ordered][:dice] == 6
-            if @players[ordered][:name] == "computer"
-              @dice.roll_dice
-              @dice_pressed = true
-            end
+      if @next_step == 1
+        if @players[ordered][:dice] == 6
+          if @players[ordered][:name] == "computer"
+            @dice.roll_dice
+            @dice_pressed = true
+            @dice_active = true
           else
-            @order_index += 1
+            @dice_active = true
+            @next_step = 0
           end
+        else
+          @order_index += 1
+          @dice_active = true
+          @next_step = 0
+        end
 
-          if @order_index == @total_players
-            @order_index = 0
-          end
+        if @order_index == @total_players
+          @order_index = 0
         end
       end
 
@@ -292,7 +315,8 @@ class Game < Gosu::Window
             player[:position] = player[:revised_position]
             player[:revised_position] = 0
           end
-          if winner? #play finishes before player moves to winning position
+
+          if winner?
             puts "Congratulations #{player[:name]}, you have WON!!!!"
             @current_screen = SCREENS.find_index(:fin)
             set_screen(@current_screen)
