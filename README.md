@@ -46,8 +46,6 @@ The players then have to choose the counter they want to represent them on the
 game board
 
 ![Choose counter](https://github.com/theKHutDeveloper/SnakesAndLadders/blob/master/Screenshots/choose_counter.png)
-
-Click the next button to play the game
 ![Let's begin](https://github.com/theKHutDeveloper/SnakesAndLadders/blob/master/Screenshots/lets_play.png)
 
 The player who will play is the one with the dice underneath their name. Click
