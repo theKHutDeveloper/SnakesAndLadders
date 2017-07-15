@@ -14,6 +14,7 @@ module Settings
   COUNTER_STARTING_POS_X = [0, 10, 20, 30]
 
   COUNTER_STARTING_POS_Y = [(TILE * 9), (TILE * 9) + 15, (TILE * 9) + 30, (TILE * 9) + 45]
+
   BOARD = (1..100).to_a
 
   SNAKES = {

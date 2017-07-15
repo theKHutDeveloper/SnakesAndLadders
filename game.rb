@@ -6,6 +6,7 @@ require_relative 'gui'
 require_relative 'snake'
 require_relative 'ladder'
 
+
 class Game < Gosu::Window
   SCREENS = [:title, :instructions, :selection, :play_order, :chose_counter, :game, :fin]
 
@@ -19,6 +20,7 @@ class Game < Gosu::Window
     @chose_dice = 0
     @current_screen = SCREENS.find_index(:title)
     @buffer = Gosu::TextInput.new
+    @over_score = false
     create_gui_images
     create_snakes
     create_ladders
@@ -232,29 +234,33 @@ class Game < Gosu::Window
       if @dice_pressed
         if @dice.dice_value != 0
           @players[ordered][:dice] = @dice.dice_value
-          puts "dice = #{@players[ordered][:dice]}"
           score = @players[ordered][:position] + @players[ordered][:dice]
 
           if score <= Settings::WINNING_SCORE
             offset_x = @players[ordered][:x]
             offset_y = @players[ordered][:y]
-            puts "position = #{@players[ordered][:position]}"
             @players[ordered][:position] = score
             @dest = find_position(@players[ordered][:position], offset_x, offset_y)
-            puts @dest
             @players[ordered][:counter].set_destination(find_position(@players[ordered][:position], offset_x, offset_y))
             @dice_active = false
           else
-            @order_index += 1
-            if @order_index == @total_players
-              @order_index = 0
-            end
-            @dice_active = true
+            @over_score = true
+            @now = Gosu::milliseconds
           end
 
           @dice_pressed = false
         end
       end
+
+      if @over_score && Gosu::milliseconds > (@now + 2000)
+        @order_index += 1
+        if @order_index == @total_players
+          @order_index = 0
+        end
+        @over_score = false
+        @dice_active = true
+      end
+
 
       if @next_step == 0
         if !@dest.empty?
@@ -316,12 +322,19 @@ class Game < Gosu::Window
             player[:revised_position] = 0
           end
 
-          if winner?
-            puts "Congratulations #{player[:name]}, you have WON!!!!"
-            @current_screen = SCREENS.find_index(:fin)
-            set_screen(@current_screen)
+          if @next_step != 5
+            if winner?
+              @winner =  "Congratulations #{player[:name]}, you have WON!!!!"
+              @now = Gosu::milliseconds
+              @next_step = 5
+            end
           end
         end
+      end
+
+      if @next_step == 5 && Gosu::milliseconds > (@now + 2000)
+        @current_screen = SCREENS.find_index(:fin)
+        set_screen(@current_screen)
       end
 
     when SCREENS.find_index(:fin)
@@ -447,10 +460,15 @@ class Game < Gosu::Window
         @dice.draw
       }
 
+      if @over_score
+        @font.draw("You can't move as the dice amount is more than you need to win!", 40, 695, 0, scale_x = 1, scale_y = 1, Gosu::Color::YELLOW)
+      end
+
       if @next_step == 2
         @font.draw(@screen_text, 120, 695, 0, scale_x = 1, scale_y = 1, Gosu::Color::YELLOW)
       end
     when SCREENS.find_index(:fin)
+      @font.draw(@winner, 10, 10, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
     end
   end
 
@@ -547,8 +565,14 @@ class Game < Gosu::Window
   end
 
   def winner?
-    high_score = @players.collect { |player| player[:position]}.flatten.max
-    high_score == Settings::WINNING_SCORE
+    @players.each do |player|
+      if player[:counter].pos_x == (0 + player[:x]) && player[:counter].pos_y == (0 + player[:y])
+        return true
+        break
+      end
+    end
+
+    false
   end
 
   def create_counters

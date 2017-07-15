@@ -26,7 +26,6 @@ class Player
   def set_destination(dest)
     @destination.clear
     @destination.push(dest[0], dest[1])
-    puts "Destination #{@destination} and position #{@pos_x}, #{@pos_y}"
     @moving = true
   end
 
@@ -54,11 +53,6 @@ class Player
         if @pos_y > @destination[1]
           if @start == 0
             @first_pos = find_row(@pos_y)
-            puts "========================="
-            puts "y = #{@pos_y}"
-            puts "first pos = #{@first_pos}"
-            puts "destination y = #{@destination[1]}"
-            puts "========================="
             @start = 1
           end
 
