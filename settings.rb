@@ -29,7 +29,7 @@ module Settings
 
   WINNING_SCORE = 100
 
-  PLAY_GAME = "Play Snakes and Ladders? - [spacebar to continue OR 'esc' to exit]"
+  PLAY_GAME = "Play Snakes and Ladders? - 'esc' to exit]"
 
   HOW_TO_PLAY_1 = "HOW TO PLAY:"
   HOW_TO_PLAY_2 = "Each player puts their counter on tile marked '1'. Each players takes"
@@ -40,7 +40,6 @@ module Settings
   HOW_TO_PLAY_7 = "will slide down to the bottom of the snake."
   HOW_TO_PLAY_8 = "The first player to get to 100 is the winner."
 
-  SPACEBAR = "Press spacebar to continue"
 
   SELECT_PLAYER_NUMS = "Select number of players between 1 and 2" #4
   SELECT_PLAYER_NUMS2 = "[1 player: plays against computer]"

@@ -361,7 +361,6 @@ class Game < Gosu::Window
       @font.draw(Settings::HOW_TO_PLAY_7, 10, 260, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
       @font.draw("", 10, 290, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
       @font.draw(Settings::HOW_TO_PLAY_8, 10, 320, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
-      @font.draw(Settings::SPACEBAR, 10, 370, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
       @next_img.draw
     when SCREENS.find_index(:selection)
       @font.draw(Settings::SELECT_PLAYER_NUMS, 10, 70, 0, scale_x = 1, scale_y = 1, Gosu::Color::BLACK)
